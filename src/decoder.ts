@@ -49,11 +49,11 @@ export function pattern(regex: RegExp): Decoder<string> {
   };
 }
 
-export function optional<T>(d: Decoder<T>, alternative?: T): Decoder<T> {
+export function optional<T>(d: Decoder<T>, alternative?: T): Decoder<T | null> {
   return {
     run(value: unknown) {
       if (value === null || value === undefined) {
-        return alternative || value;
+        return alternative || null;
       }
       return d.run(value);
     }
@@ -162,3 +162,5 @@ export function toNumber(d: Decoder<string>): Decoder<number> {
     }
   };
 }
+
+export type Type<T> = T extends Decoder<infer U> ? U : never;
