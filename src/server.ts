@@ -1,22 +1,47 @@
 import * as express from "express";
-import { DecodeError } from "./decoder";
-import { bodyDecoder, paramsDecoder, queryDecoder } from "./data";
+import { DecodeError, Decoder, DecodermMap } from "./decoder";
 import PromiseRouter from "express-promise-router";
+import { object, number, string, optional, toInt, any } from "./decoder";
 
 type Req = express.Request;
 type Res = express.Response;
 
 const router = PromiseRouter();
 
+function reqDecoder<P, Q, B>(options: {
+  params?: DecodermMap<P>;
+  query?: DecodermMap<Q>;
+  body?: Decoder<B>;
+}): Decoder<{ params: P; query: Q; body: B }> {
+  return object({
+    params: options.params ? object(options.params) : any,
+    query: options.query ? object(options.query) : any,
+    body: options.body || any
+  });
+}
+
 router.use(express.json());
+
 router.post("/users", async (req: Req, res: Res) => {
-  const body = bodyDecoder.run(req.body);
+  const { body } = reqDecoder({
+    body: object({
+      age: number,
+      name: string
+    })
+  }).run(req);
   console.log("body", body);
   res.send({ message: "ok" });
 });
+
 router.get("/users/:userId", async (req: Req, res: Res) => {
-  const params = paramsDecoder.run(req.params);
-  const query = queryDecoder.run(req.query);
+  const { params, query } = reqDecoder({
+    params: {
+      userId: toInt(string)
+    },
+    query: {
+      q: optional(string)
+    }
+  }).run(req);
   console.log("params", params);
   console.log("query", query);
   res.send({ message: "ok" });

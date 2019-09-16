@@ -5,7 +5,7 @@ export interface Decoder<T> {
 export class DecodeError extends Error {}
 
 export const any: Decoder<any> = {
-  run(value: unknown) {
+  run(value: any) {
     return value;
   }
 };
@@ -49,11 +49,11 @@ export function pattern(regex: RegExp): Decoder<string> {
   };
 }
 
-export function optional<T>(d: Decoder<T>, alternative?: T): Decoder<T> {
+export function optional<T>(d: Decoder<T>, alternative?: T): Decoder<T | null> {
   return {
     run(value: unknown) {
       if (value === null || value === undefined) {
-        return alternative || value;
+        return alternative || null;
       }
       return d.run(value);
     }
@@ -70,7 +70,7 @@ export function array<T>(d: Decoder<T>): Decoder<T[]> {
     }
   };
 }
-
+export type DecodermMap<T> = { [K in keyof T]: Decoder<T[K]> };
 export function object<T>(d: { [K in keyof T]: Decoder<T[K]> }): Decoder<T> {
   return {
     run(value: unknown): T {
